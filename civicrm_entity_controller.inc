@@ -327,8 +327,24 @@ class CivicrmEntityController extends EntityAPIController {
 
     // get what we get by the 'return' property in the API call
     if(!empty($return_fields['return'])) {
-      $condition['return'] = $return_fields['return'];
-      $civicrm_entities2 = civicrm_api3($this->entityInfo['description'], 'get', $condition);
+      $batch_size = 50; // Maximum fields per request to avoid too many joins
+      $return_batches = array_chunk($return_fields['return'], $batch_size);
+      
+      $civicrm_entities2 = ['values' => []];
+      foreach ($return_batches as $return_batch) {
+        $batch_condition = $condition;
+        $batch_condition['return'] = $return_batch;
+        
+        $batch_result = civicrm_api3($this->entityInfo['description'], 'get', $batch_condition);
+        
+        // Merge batch results
+        foreach ($batch_result['values'] as $id => $entity) {
+          if (empty($civicrm_entities2['values'][$id])) {
+            $civicrm_entities2['values'][$id] = [];
+          }
+          $civicrm_entities2['values'][$id] = array_merge($civicrm_entities2['values'][$id], $entity);
+        }
+      }
     }
 
     // merge the two together
