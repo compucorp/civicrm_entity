@@ -3070,6 +3070,8 @@ function civicrm_entity_action_create_user($contact, $is_active, $notify = FALSE
          watchdog('civicrm_entity', 'Check name %error.', array('%error' => $error), WATCHDOG_ERROR);
        }
        $params['name'] = $params['name'] . "$ind";
+       // Reset the errors when we check new username.
+       $errors = array();
     }
     else {
        $ind = 0;
